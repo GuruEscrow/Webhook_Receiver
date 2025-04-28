@@ -1,6 +1,9 @@
 package UATCallback;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -44,6 +47,8 @@ public class VanCollect extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
 		
 		StringBuilder callBack = new StringBuilder();
 		BufferedReader reader = request.getReader();
@@ -53,8 +58,11 @@ public class VanCollect extends HttpServlet {
 		}
 		reader.close();
 		
+		System.out.println("plain Callback --> "+callBack);
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		System.out.println("\nNSDL collect callBack --> "+gson.toJson(JsonParser.parseString(callBack.toString())));
+		
+		writeToFile("\nNSDL collect callBack --> "+gson.toJson(JsonParser.parseString(callBack.toString())));
 		
 		JsonObject jsonReq = JsonParser.parseString(callBack.toString()).getAsJsonObject();
 		
@@ -72,9 +80,9 @@ public class VanCollect extends HttpServlet {
 			    "txnRefNo", 
 			    "txnAmount", 
 			    "debitoraccountno", 
-			    "debitoraccountname", 
-			    "debitorbankname", 
-			    "debitorifsc", 
+//			    "debitoraccountname", 
+//			    "debitorbankname", 
+//			    "debitorifsc", 
 			    "virtualaccountno", 
 			    "txnmode" 
 			};
@@ -83,7 +91,10 @@ public class VanCollect extends HttpServlet {
 			    if (!jsonReq.has(field) || jsonReq.get(field).isJsonNull()) {
 			        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			        String res = "{\n" + 
+			        	"  \"respmessage\":\"FAILURE\",\n" +
+		                "  \"respcode\":\"99\"\n" +
 			            "  \"message\": \"" + field + " is required\"\n" + 
+			        		
 			            "}";
 			        out.println(res);
 			        out.close();
@@ -96,6 +107,8 @@ public class VanCollect extends HttpServlet {
 			    if (value.trim().isEmpty()) {
 			        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			        String res = "{\n" + 
+			            "  \"respmessage\":\"FAILURE\",\n" +
+			            "  \"respcode\":\"99\"\n" +
 			            "  \"message\": \"" + field + " cannot be empty\"\n" + 
 			            "}";
 			        out.println(res);
@@ -105,37 +118,69 @@ public class VanCollect extends HttpServlet {
 			    }
 			}
 			
+			
+			
 			//Request parameters
 			String vanNum = jsonReq.get("virtualaccountno").getAsString();
 //			String txnAmt = jsonReq.get("utrNo").getAsString();
 			String txnRefNo = jsonReq.get("txnRefNo").getAsString();
+			String virtualCorpid = jsonReq.get("virtualcorpid").getAsString();
 			
 			//Existing Van
 			ArrayList<String> vanNums = new ArrayList<String>();
+			vanNums.add("ESTA0001");
 			vanNums.add("ESTA0002");
+			vanNums.add("ESTA0003");
 			
 			//Validating for Expired Van
 	         if(vanNums.contains(vanNum)) {
-	        	 String res = "{\n" + 
-	        			 "  \"Status\": \"Success\",\n" +
-				            "  \"message\": \"Valid Van\"\n" + 
-				            "}";
+	        	 String res = "{\n" +
+	                     "\"virtualcorpid\":\""+virtualCorpid+"\",\n" +
+	                     "\"respmessage\":\"SUCCESSFUL\",\n" +
+	                     "\"respcode\":\"00\"\n" +
+	                     "}";
 	        	 response.setStatus(HttpServletResponse.SC_OK);
 	        	 out.println(res);
 	        	 out.close();
 	        	 System.out.println("=============================================================================");
 				 return;
 	         }else {
-	        	 String res = "{\n" + 
-	        			 "  \"Status\": \"Failed\",\n" +
-				            "  \"message\": \"VAN not exists\"\n" + 
-				            "}";
-	        	 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+	        	 String res = "{\n" +
+	                     "\"virtualcorpid\":\""+virtualCorpid+"\",\n" +
+	                     "\"respmessage\":\"FAILURE\",\n" +
+	                     "\"respcode\":\"99\"\n" +
+	                     "}";
+	        	 response.setStatus(HttpServletResponse.SC_OK);
 	        	 out.println(res);
 	        	 out.close();
 	        	 System.out.println("=============================================================================");
 				 return;
 	         }
+	}
+	
+	public static void writeToFile(String dataToLog) {
+
+		String filePath = "D:\\Phedora\\Banks\\NSDL\\nsdl_VanCollectLog.txt";
+
+		File file = new File(filePath);
+		boolean fileExists = file.exists();
+
+		try {
+			if (!fileExists) {
+				file.createNewFile();
+				System.out.println("File created: " + filePath);
+			}
+
+			try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
+				writer.newLine(); // Move to the next line
+				writer.write(dataToLog); // Append new data
+			}
+
+		} catch (IOException e) {
+			System.err.println("An error occurred while writing to the file.");
+			e.printStackTrace();
+		}
+
 	}
 
 }
