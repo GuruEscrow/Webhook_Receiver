@@ -1,6 +1,9 @@
 package UATCallback;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -82,6 +85,7 @@ public class VANValidationCallBack extends HttpServlet {
 
 			System.out.println("IDFC VAN Validation");
 			System.out.println(gson.toJson(JsonParser.parseString(strJsonReq)));
+			writeToFile(gson.toJson(JsonParser.parseString(strJsonReq.toString())));
 
 			PrintWriter out = response.getWriter();
 			// Validating all required fields are present
@@ -133,11 +137,11 @@ public class VANValidationCallBack extends HttpServlet {
 			//Existing Van
 			ArrayList<String> vanNums = new ArrayList<String>();
 			vanNums.add("WOWPEZVAN001");
-			vanNums.add("ESCROZVAN002"); 
-			vanNums.add("ESCROZVAN003");
-			vanNums.add("ESCROZVAN004");
-			vanNums.add("ESCROZVAN005");   //Expired
-			vanNums.add("ESCROZVAN006");   //Updated
+			vanNums.add("WOWPEZVAN002"); 
+			vanNums.add("WOWPEZVAN003");
+			vanNums.add("WOWPEZVAN004");
+			vanNums.add("WOWPEZVAN005");   //Expired
+			vanNums.add("WOWPEZVAN006");   //Updated
 			
 			//Expired VAN
 			ArrayList<String> expVanNums = new ArrayList<String>();
@@ -203,6 +207,30 @@ public class VANValidationCallBack extends HttpServlet {
 			out.close();
 			e.printStackTrace();
 		}
+	}
+	
+	public static void writeToFile(String dataToLog) {
+
+		String filePath = "D:\\Phedora\\Banks\\IDFC\\IDFC_VanValidation_callback_log.txt";
+
+		File file = new File(filePath);
+		boolean fileExists = file.exists();
+
+		try {
+			if (!fileExists) {
+				file.createNewFile();
+			}
+
+			try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
+				writer.newLine(); // Move to the next line
+				writer.write(dataToLog); // Append new data
+			}
+
+		} catch (IOException e) {
+			System.err.println("An error occurred while writing to the file.");
+			e.printStackTrace();
+		}
+
 	}
 
 }

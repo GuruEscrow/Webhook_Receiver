@@ -1,6 +1,9 @@
 package UATCallback;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -82,6 +85,7 @@ public class CollectCallback extends HttpServlet {
 
 			System.out.println("IDFC Collect Insta Alert");
 			System.out.println(gson.toJson(JsonParser.parseString(encryptedRequest.toString())));
+			writeToFile(gson.toJson(JsonParser.parseString(encryptedRequest.toString())));
 
 			PrintWriter out = response.getWriter();
 			// Validating all required fields are present
@@ -143,9 +147,9 @@ public class CollectCallback extends HttpServlet {
 			//Existing Van
 			ArrayList<String> vanNums = new ArrayList<String>();
 			vanNums.add("WOWPEZVAN001");
-			vanNums.add("ESCROZVAN002"); 
-			vanNums.add("ESCROZVAN003");
-			vanNums.add("ESCROZVAN004");
+			vanNums.add("WOWPEZVAN002"); 
+			vanNums.add("WOWPEZVAN003");
+			vanNums.add("WOWPEZVAN004");
 	         
 	         //Validating for Expired Van
 	         if(vanNums.contains(vanNum)) {
@@ -180,6 +184,30 @@ public class CollectCallback extends HttpServlet {
 			out.close();
 			e.printStackTrace();
 		}
+	}
+	
+	public static void writeToFile(String dataToLog) {
+
+		String filePath = "D:\\Phedora\\Banks\\IDFC\\IDFC_Collect_callback_log.txt";
+
+		File file = new File(filePath);
+		boolean fileExists = file.exists();
+
+		try {
+			if (!fileExists) {
+				file.createNewFile();
+			}
+
+			try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
+				writer.newLine(); // Move to the next line
+				writer.write(dataToLog); // Append new data
+			}
+
+		} catch (IOException e) {
+			System.err.println("An error occurred while writing to the file.");
+			e.printStackTrace();
+		}
+
 	}
 
 }
